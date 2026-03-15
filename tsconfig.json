@@ -11,6 +11,9 @@
       ]
     }
   },
+  "exclude": [
+    "example"
+  ],
   "include": [
     "**/*.ts",
     "**/*.tsx",
