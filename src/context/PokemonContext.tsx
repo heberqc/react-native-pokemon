@@ -1,14 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
-import { getPokemonListWithDetails } from '@/services/pokemonService';
+import { getPokemonPage } from '@/services/pokemonService';
 import { PokemonDetail } from '@/types/pokemon';
 
 interface PokemonContextType {
   pokemonList: PokemonDetail[];
   loading: boolean;
   error: string | null;
+  loadingMore: boolean;
+  loadMorePokemon: () => void;
 }
+
+const DEFAULT_FIRST_PAGE = 'pokemon?limit=20';
 
 const PokemonContext = createContext<PokemonContextType | undefined>(undefined);
 
@@ -21,6 +25,8 @@ const POKEMON_CACHE_KEY = '@pokemon_list_cache';
 export const PokemonProvider = ({ children }: PokemonProviderProps) => {
   const [pokemonList, setPokemonList] = useState<PokemonDetail[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [nextUrl, setNextUrl] = useState<string | null>(DEFAULT_FIRST_PAGE);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,15 +37,16 @@ export const PokemonProvider = ({ children }: PokemonProviderProps) => {
         if (cachedData) {
           setPokemonList(JSON.parse(cachedData));
           hasCachedData = true;
-          setLoading(false); // Display cached UI immediately
+          setLoading(false); // Display cached
         } else {
-          setLoading(true); // Only show loading spinner if no cache exists
+          setLoading(true); // Show loading spinner if no cache exists
         }
 
-        const data = await getPokemonListWithDetails();
-        setPokemonList(data);
-        await AsyncStorage.setItem(POKEMON_CACHE_KEY, JSON.stringify(data));
+        const { details, nextUrl: newNextUrl } = await getPokemonPage(DEFAULT_FIRST_PAGE);
+        setPokemonList(details);
+        setNextUrl(newNextUrl);
         setError(null);
+        await AsyncStorage.setItem(POKEMON_CACHE_KEY, JSON.stringify(details));
       } catch (err) {
         if (!hasCachedData) {
           setError('Failed to fetch Pokémon data.');
@@ -51,9 +58,28 @@ export const PokemonProvider = ({ children }: PokemonProviderProps) => {
     };
 
     loadPokemon();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
 
-  const value = { pokemonList, loading, error };
+  const loadMorePokemon = async () => {
+    if (loadingMore || !nextUrl) {
+      return;
+    }
+
+    setLoadingMore(true);
+    try {
+      const { details: newDetails, nextUrl: newNextUrl } = await getPokemonPage(nextUrl);
+      const updatedList = [...pokemonList, ...newDetails];
+      setPokemonList(updatedList);
+      setNextUrl(newNextUrl);
+      await AsyncStorage.setItem(POKEMON_CACHE_KEY, JSON.stringify(updatedList));
+    } catch (err) {
+      console.error('Failed to load more Pokémon:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const value = { pokemonList, loading, error, loadingMore, loadMorePokemon };
 
   return <PokemonContext.Provider value={value}>{children}</PokemonContext.Provider>;
 };

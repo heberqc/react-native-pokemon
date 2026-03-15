@@ -23,7 +23,7 @@ const PokemonListItem = React.memo(({ item }: { item: PokemonDetail }) => {
 });
 
 export default function HomeScreen() {
-  const { pokemonList, loading, error } = usePokemon();
+  const { pokemonList, loading, error, loadingMore, loadMorePokemon } = usePokemon();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredPokemon, setFilteredPokemon] = useState<PokemonDetail[]>([]);
 
@@ -51,6 +51,12 @@ export default function HomeScreen() {
     );
   }
 
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+
+    return <ActivityIndicator animating={true} size="large" style={styles.footerSpinner} />;
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: 'Pokédex' }} />
@@ -67,6 +73,9 @@ export default function HomeScreen() {
         numColumns={2}
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
+        onEndReached={searchQuery === '' ? loadMorePokemon : null} // Only load more if not searching
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={renderFooter}
       />
     </View>
   );
@@ -95,5 +104,8 @@ const styles = StyleSheet.create({
   name: {
     marginTop: 8,
     textTransform: 'capitalize',
+  },
+  footerSpinner: {
+    marginVertical: 20,
   },
 });
