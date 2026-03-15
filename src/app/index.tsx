@@ -7,7 +7,7 @@ import { ActivityIndicator, Card, Text } from 'react-native-paper';
 import { usePokemon } from '@/context/PokemonContext';
 import { PokemonDetail } from '@/types/pokemon';
 
-const PokemonListItem = ({ item }: { item: PokemonDetail }) => {
+const PokemonListItem = React.memo(({ item }: { item: PokemonDetail }) => {
   const spriteUrl = item.sprites.other['official-artwork'].front_default;
 
   return (
@@ -20,7 +20,7 @@ const PokemonListItem = ({ item }: { item: PokemonDetail }) => {
       </Card.Content>
     </Card>
   );
-};
+});
 
 export default function HomeScreen() {
   const { pokemonList, loading, error } = usePokemon();
