@@ -10,17 +10,17 @@ interface PokemonContextType {
   error: string | null;
   loadingMore: boolean;
   loadMorePokemon: () => void;
+  refreshPokemon: () => Promise<void>;
 }
 
 const DEFAULT_FIRST_PAGE = 'pokemon?limit=20';
+const POKEMON_CACHE_KEY = '@pokemon_list_cache';
 
 const PokemonContext = createContext<PokemonContextType | undefined>(undefined);
 
 interface PokemonProviderProps {
   children: ReactNode;
 }
-
-const POKEMON_CACHE_KEY = '@pokemon_list_cache';
 
 export const PokemonProvider = ({ children }: PokemonProviderProps) => {
   const [pokemonList, setPokemonList] = useState<PokemonDetail[]>([]);
@@ -79,7 +79,23 @@ export const PokemonProvider = ({ children }: PokemonProviderProps) => {
     }
   };
 
-  const value = { pokemonList, loading, error, loadingMore, loadMorePokemon };
+  const refreshPokemon = async () => {
+    setLoading(true);
+    try {
+      const { details, nextUrl: newNextUrl } = await getPokemonPage(DEFAULT_FIRST_PAGE);
+      setPokemonList(details);
+      setNextUrl(newNextUrl);
+      setError(null);
+      await AsyncStorage.setItem(POKEMON_CACHE_KEY, JSON.stringify(details));
+    } catch (err) {
+      setError('Failed to refresh Pokémon data.');
+      console.error('Failed to refresh Pokémon:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const value = { pokemonList, loading, error, loadingMore, loadMorePokemon, refreshPokemon };
 
   return <PokemonContext.Provider value={value}>{children}</PokemonContext.Provider>;
 };

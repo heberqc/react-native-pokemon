@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Card, Searchbar, Text } from 'react-native-paper';
+import { ActivityIndicator, Card, FAB, Searchbar, Text } from 'react-native-paper';
 
 import { PokemonDetailModal } from '@/components/PokemonDetailModal';
 import { usePokemon } from '@/context/PokemonContext';
@@ -26,7 +26,8 @@ const PokemonListItem = React.memo(
 );
 
 export default function HomeScreen() {
-  const { pokemonList, loading, error, loadingMore, loadMorePokemon } = usePokemon();
+  const { pokemonList, loading, error, loadingMore, loadMorePokemon, refreshPokemon } =
+    usePokemon();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredPokemon, setFilteredPokemon] = useState<PokemonDetail[]>([]);
   const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetail | null>(null);
@@ -88,6 +89,13 @@ export default function HomeScreen() {
         visible={!!selectedPokemon}
         onDismiss={() => setSelectedPokemon(null)}
       />
+      <FAB
+        icon="refresh"
+        style={styles.fab}
+        onPress={refreshPokemon}
+        loading={loading && pokemonList.length > 0}
+        disabled={loading}
+      />
     </View>
   );
 }
@@ -118,5 +126,11 @@ const styles = StyleSheet.create({
   },
   footerSpinner: {
     marginVertical: 20,
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
 });
