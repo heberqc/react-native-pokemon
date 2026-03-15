@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 import { getPokemonListWithDetails } from '@/services/pokemonService';
@@ -15,6 +16,8 @@ interface PokemonProviderProps {
   children: ReactNode;
 }
 
+const POKEMON_CACHE_KEY = '@pokemon_list_cache';
+
 export const PokemonProvider = ({ children }: PokemonProviderProps) => {
   const [pokemonList, setPokemonList] = useState<PokemonDetail[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -22,13 +25,25 @@ export const PokemonProvider = ({ children }: PokemonProviderProps) => {
 
   useEffect(() => {
     const loadPokemon = async () => {
+      let hasCachedData = false;
       try {
-        setLoading(true);
+        const cachedData = await AsyncStorage.getItem(POKEMON_CACHE_KEY);
+        if (cachedData) {
+          setPokemonList(JSON.parse(cachedData));
+          hasCachedData = true;
+          setLoading(false); // Display cached UI immediately
+        } else {
+          setLoading(true); // Only show loading spinner if no cache exists
+        }
+
         const data = await getPokemonListWithDetails();
         setPokemonList(data);
+        await AsyncStorage.setItem(POKEMON_CACHE_KEY, JSON.stringify(data));
         setError(null);
       } catch (err) {
-        setError('Failed to fetch Pokémon data.');
+        if (!hasCachedData) {
+          setError('Failed to fetch Pokémon data.');
+        }
         console.error(err);
       } finally {
         setLoading(false);
