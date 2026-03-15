@@ -45,6 +45,8 @@ export const PokemonDetailModal = ({ pokemon, visible, onDismiss }: PokemonDetai
   );
 };
 
+export default PokemonDetailModal;
+
 const styles = StyleSheet.create({
   name: {
     marginTop: 8,

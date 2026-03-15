@@ -1,10 +1,10 @@
 import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { ActivityIndicator, Card, FAB, Searchbar, Text } from 'react-native-paper';
 
-import { PokemonDetailModal } from '@/components/PokemonDetailModal';
+import PokemonDetailModal from '@/components/PokemonDetailModal';
 import { usePokemon } from '@/context/PokemonContext';
 import { PokemonDetail } from '@/types/pokemon';
 
@@ -31,6 +31,7 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredPokemon, setFilteredPokemon] = useState<PokemonDetail[]>([]);
   const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetail | null>(null);
+  const { width } = useWindowDimensions();
 
   useEffect(() => {
     const filtered = pokemonList.filter((pokemon) =>
@@ -39,13 +40,16 @@ export default function HomeScreen() {
     setFilteredPokemon(filtered);
   }, [searchQuery, pokemonList]);
 
-  if (loading && pokemonList.length === 0) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator animating={true} size="large" />
-      </View>
-    );
-  }
+  const numOfColumns = useMemo(() => {
+    if (width < 375) {
+      return 1;
+    } else if (width < 600) {
+      return 2;
+    } else if (width < 900) {
+      return 3;
+    }
+    return 4;
+  }, [width]);
 
   if (error) {
     return (
@@ -76,8 +80,9 @@ export default function HomeScreen() {
         renderItem={({ item }) => (
           <PokemonListItem item={item} onPress={() => setSelectedPokemon(item)} />
         )}
+        key={numOfColumns}
         keyExtractor={(item) => item.id.toString()}
-        numColumns={2}
+        numColumns={numOfColumns}
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
         onEndReached={searchQuery === '' ? loadMorePokemon : null} // Only load more if not searching
