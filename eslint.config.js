@@ -1,15 +1,17 @@
+const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
 const eslintPluginPrettierRecommended = require('eslint-plugin-prettier/recommended');
+const eslintPluginReactNative = require('eslint-plugin-react-native');
 
-module.exports = [
-  // Base Expo configuration
-  ...expoConfig,
-
-  // Applies Prettier rules and disables formatting rules that conflict with Prettier
+module.exports = defineConfig([
+  expoConfig,
   eslintPluginPrettierRecommended,
-
-  // Global ignores must be in their own standalone object
   {
-    ignores: ['dist/', '.expo/', 'node_modules/'],
+    plugins: {
+      'react-native': eslintPluginReactNative,
+    },
+    rules: {
+      'react-native/no-unused-styles': 'error',
+    },
   },
-];
+]);
