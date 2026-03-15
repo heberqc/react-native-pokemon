@@ -4,28 +4,32 @@ import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Card, Searchbar, Text } from 'react-native-paper';
 
+import { PokemonDetailModal } from '@/components/PokemonDetailModal';
 import { usePokemon } from '@/context/PokemonContext';
 import { PokemonDetail } from '@/types/pokemon';
 
-const PokemonListItem = React.memo(({ item }: { item: PokemonDetail }) => {
-  const spriteUrl = item.sprites.other['official-artwork'].front_default;
+const PokemonListItem = React.memo(
+  ({ item, onPress }: { item: PokemonDetail; onPress: () => void }) => {
+    const spriteUrl = item.sprites.other['official-artwork'].front_default;
 
-  return (
-    <Card style={styles.card}>
-      <Card.Content style={styles.cardContent}>
-        <Image source={{ uri: spriteUrl }} style={styles.sprite} contentFit="contain" />
-        <Text variant="titleMedium" style={styles.name}>
-          {item.name}
-        </Text>
-      </Card.Content>
-    </Card>
-  );
-});
+    return (
+      <Card style={styles.card} onPress={onPress}>
+        <Card.Content style={styles.cardContent}>
+          <Image source={{ uri: spriteUrl }} style={styles.sprite} contentFit="contain" />
+          <Text variant="titleMedium" style={styles.name}>
+            {item.name}
+          </Text>
+        </Card.Content>
+      </Card>
+    );
+  }
+);
 
 export default function HomeScreen() {
   const { pokemonList, loading, error, loadingMore, loadMorePokemon } = usePokemon();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredPokemon, setFilteredPokemon] = useState<PokemonDetail[]>([]);
+  const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetail | null>(null);
 
   useEffect(() => {
     const filtered = pokemonList.filter((pokemon) =>
@@ -68,7 +72,9 @@ export default function HomeScreen() {
       />
       <FlatList
         data={filteredPokemon}
-        renderItem={({ item }) => <PokemonListItem item={item} />}
+        renderItem={({ item }) => (
+          <PokemonListItem item={item} onPress={() => setSelectedPokemon(item)} />
+        )}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
         contentContainerStyle={styles.listContent}
@@ -76,6 +82,11 @@ export default function HomeScreen() {
         onEndReached={searchQuery === '' ? loadMorePokemon : null} // Only load more if not searching
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
+      />
+      <PokemonDetailModal
+        pokemon={selectedPokemon}
+        visible={!!selectedPokemon}
+        onDismiss={() => setSelectedPokemon(null)}
       />
     </View>
   );
