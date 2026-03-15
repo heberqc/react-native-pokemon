@@ -1,8 +1,8 @@
 import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Card, Text } from 'react-native-paper';
+import { ActivityIndicator, Card, Searchbar, Text } from 'react-native-paper';
 
 import { usePokemon } from '@/context/PokemonContext';
 import { PokemonDetail } from '@/types/pokemon';
@@ -24,6 +24,15 @@ const PokemonListItem = React.memo(({ item }: { item: PokemonDetail }) => {
 
 export default function HomeScreen() {
   const { pokemonList, loading, error } = usePokemon();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredPokemon, setFilteredPokemon] = useState<PokemonDetail[]>([]);
+
+  useEffect(() => {
+    const filtered = pokemonList.filter((pokemon) =>
+      pokemon.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredPokemon(filtered);
+  }, [searchQuery, pokemonList]);
 
   if (loading && pokemonList.length === 0) {
     return (
@@ -45,12 +54,19 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: 'Pokédex' }} />
+      <Searchbar
+        placeholder="Search Pokémon"
+        onChangeText={setSearchQuery}
+        value={searchQuery}
+        style={styles.searchbar}
+      />
       <FlatList
-        data={pokemonList}
+        data={filteredPokemon}
         renderItem={({ item }) => <PokemonListItem item={item} />}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
         contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
       />
     </View>
   );
@@ -59,7 +75,11 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: 8 },
+  listContent: { paddingHorizontal: 8 },
+  searchbar: {
+    marginHorizontal: 12,
+    marginTop: 8,
+  },
   card: {
     flex: 1,
     margin: 4,
