@@ -10,7 +10,7 @@ import { PokemonDetail } from '@/types/pokemon';
 
 const PokemonListItem = React.memo(
   ({ item, onPress }: { item: PokemonDetail; onPress: () => void }) => {
-    const spriteUrl = item.sprites.other['official-artwork'].front_default;
+    const spriteUrl = item.sprites.front_default;
 
     return (
       <Card style={styles.card} onPress={onPress}>
