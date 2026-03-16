@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 import { usePokemon } from '@/context/PokemonContext';
@@ -20,8 +20,8 @@ describe('HomeScreen', () => {
   const mockLoadMorePokemon = jest.fn();
 
   const mockPokemonList: any[] = [
-    { id: 1, name: 'Bulbasaur', sprites: { front_default: 'url' } },
-    { id: 4, name: 'Charmander', sprites: { front_default: 'url' } },
+    { id: 1, name: 'Bulbasaur', sprites: { front_default: 'url' }, weight: 69, height: 7 },
+    { id: 4, name: 'Charmander', sprites: { front_default: 'url' }, weight: 85, height: 6 },
   ];
 
   beforeEach(() => {
@@ -59,5 +59,45 @@ describe('HomeScreen', () => {
 
     expect(screen.getByText('Error')).toBeTruthy();
     expect(screen.getByText('Something went wrong')).toBeTruthy();
+  });
+
+  it('filters the pokemon list when searching', () => {
+    mockUsePokemon.mockReturnValue({
+      pokemonList: mockPokemonList,
+      loading: false,
+      error: null,
+      loadingMore: false,
+      loadMorePokemon: mockLoadMorePokemon,
+      refreshPokemon: mockRefreshPokemon,
+    });
+
+    render(<HomeScreen />);
+
+    // Find the search bar and type 'char'
+    const searchInput = screen.getByPlaceholderText('Search Pokémon');
+    fireEvent.changeText(searchInput, 'char');
+
+    // Charmander should still be visible, but Bulbasaur should be gone
+    expect(screen.getByText('Charmander')).toBeTruthy();
+    expect(screen.queryByText('Bulbasaur')).toBeNull();
+  });
+
+  it('opens the modal and displays pokemon details when a card is pressed', () => {
+    mockUsePokemon.mockReturnValue({
+      pokemonList: mockPokemonList,
+      loading: false,
+      error: null,
+      loadingMore: false,
+      loadMorePokemon: mockLoadMorePokemon,
+      refreshPokemon: mockRefreshPokemon,
+    });
+
+    render(<HomeScreen />);
+
+    fireEvent.press(screen.getByText('Bulbasaur'));
+
+    // Using regex to loosely match the numbers, in case your Modal formats them (e.g., "Weight: 69kg")
+    expect(screen.getByText(/69/)).toBeTruthy();
+    expect(screen.getByText(/7/)).toBeTruthy();
   });
 });
