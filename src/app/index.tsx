@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { ActivityIndicator, Card, FAB, Searchbar, Text } from 'react-native-paper';
 
-import PokemonDetailModal from '@/components/PokemonDetailModal';
+import { PokemonDetailModal } from '@/components/PokemonDetailModal';
 import { usePokemon } from '@/context/PokemonContext';
 import { PokemonDetail } from '@/types/pokemon';
 
