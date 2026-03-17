@@ -1,11 +1,12 @@
 import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
+import React, { useState } from 'react';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Card, FAB, Searchbar, Text } from 'react-native-paper';
 
 import { PokemonDetailModal } from '@/components/PokemonDetailModal';
 import { usePokemon } from '@/context/PokemonContext';
+import { usePokemonSearch, useResponsiveColumns } from '@/hooks';
 import { PokemonDetail } from '@/types/pokemon';
 
 const PokemonListItem = React.memo(
@@ -13,7 +14,7 @@ const PokemonListItem = React.memo(
     const spriteUrl = item.sprites.front_default;
 
     return (
-      <Card style={styles.card} onPress={onPress}>
+      <Card style={styles.card} onPress={onPress} testID={`pokemon-card-${item.id}`}>
         <Card.Content style={styles.cardContent}>
           <Image source={{ uri: spriteUrl }} style={styles.sprite} contentFit="contain" />
           <Text variant="titleMedium" style={styles.name}>
@@ -28,28 +29,9 @@ const PokemonListItem = React.memo(
 export default function HomeScreen() {
   const { pokemonList, loading, error, loadingMore, loadMorePokemon, refreshPokemon } =
     usePokemon();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredPokemon, setFilteredPokemon] = useState<PokemonDetail[]>([]);
+  const { searchQuery, setSearchQuery, filteredPokemon } = usePokemonSearch(pokemonList);
+  const numOfColumns = useResponsiveColumns();
   const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetail | null>(null);
-  const { width } = useWindowDimensions();
-
-  useEffect(() => {
-    const filtered = pokemonList.filter((pokemon) =>
-      pokemon.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredPokemon(filtered);
-  }, [searchQuery, pokemonList]);
-
-  const numOfColumns = useMemo(() => {
-    if (width < 375) {
-      return 1;
-    } else if (width < 600) {
-      return 2;
-    } else if (width < 900) {
-      return 3;
-    }
-    return 4;
-  }, [width]);
 
   if (error) {
     return (
